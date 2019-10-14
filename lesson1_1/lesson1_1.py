@@ -6,7 +6,7 @@ import requests
 import os
 
 nickname = 'irustam'
-repos = 1000
+repos = 100
 page = 1
 while True:
     url = f'https://api.github.com/users/{nickname}/repos?per_page={repos}&page={page}'
