@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Scrapy settings for avito_auto project
+# Scrapy settings for insta project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -10,16 +10,17 @@
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 import random
 
-BOT_NAME = 'avito_auto'
+BOT_NAME = 'insta'
 
-SPIDER_MODULES = ['avito_auto.spiders']
-NEWSPIDER_MODULE = 'avito_auto.spiders'
+SPIDER_MODULES = ['insta.spiders']
+NEWSPIDER_MODULE = 'insta.spiders'
 LOG_ENABLED = True
 LOG_LEVEL = 'DEBUG'
 
+
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36'
 #USER_AGENT = 'Mozilla/5.0 (iPhone; CPU iPhone OS 7_0_6 like Mac OS X) AppleWebKit/537.51.1 (KHTML, like Gecko) Version/7.0 Mobile/11B651 Safari/9537.53'
+USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
@@ -30,10 +31,10 @@ ROBOTSTXT_OBEY = False
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = random.randint(2, 6)
+#DOWNLOAD_DELAY = random.randint(2, 6)
 
 # The download delay setting will honor only one of:
-CONCURRENT_REQUESTS_PER_DOMAIN = 2
+#CONCURRENT_REQUESTS_PER_DOMAIN = 2
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
@@ -51,14 +52,16 @@ COOKIES_ENABLED = True
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    'avito_auto.middlewares.AvitoAutoSpiderMiddleware': 543,
+#    'insta.middlewares.InstaSpiderMiddleware': 543,
 #}
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    'avito_auto.middlewares.AvitoAutoDownloaderMiddleware': 543,
-#}
+RETRY_HTTP_CODES = [429]
+DOWNLOADER_MIDDLEWARES = {
+    'scrapy.downloadmiddlewares.retry.RetryMiddleware': None,
+    'insta.middlewares.TooManyRequestsRetryMiddleware': 543,
+}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
@@ -68,11 +71,10 @@ COOKIES_ENABLED = True
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-ITEM_PIPELINES = {
-    'avito_auto.pipelines.AvitoImagesPipeline': 100,
-    'avito_auto.pipelines.AvitoAutoPipeline': 300,
-}
-IMAGES_STORE = 'images'
+#ITEM_PIPELINES = {
+#    'insta.pipelines.InstaPipeline': 300,
+#}
+
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
 #AUTOTHROTTLE_ENABLED = True
