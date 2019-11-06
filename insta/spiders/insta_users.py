@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 import json
 import scrapy
+from scrapy import signals
 from copy import deepcopy
 from scrapy.http import HtmlResponse
 from scrapy.loader import ItemLoader
 from urllib.parse import urlencode, urljoin
+from user_actions import show_insta_actions
 from config import graphql_url, variables_base
-from insta.items import InstaItemPosts, \
-                        InstaItemFollows, \
+from insta.items import InstaItemFollows, \
+                        InstaItemPosts, \
                         InstaItemComments, \
                         InstaItemLikes
 
@@ -28,6 +30,16 @@ class InstaUsersSpider(scrapy.Spider):
         self.likes = {}
         self.query_hash = query_hash
         super().__init__(*args, **kwargs)
+
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = super(InstaUsersSpider, cls).from_crawler(crawler, *args, **kwargs)
+        crawler.signals.connect(spider.spider_closed, signal=signals.spider_closed)
+        return spider
+
+    def spider_closed(self):
+        print('finished')
+        show_insta_actions()
 
     def parse(self, response: HtmlResponse):
         csrf_token = self.get_csrf_token(response)
@@ -51,7 +63,7 @@ class InstaUsersSpider(scrapy.Spider):
                                       callback=self.parse_user,
                                       cb_kwargs={'user': user}
                                       )
-        print(1)
+        #print(1)
 
     def parse_user(self, response: HtmlResponse, user):
         url_type = 'follows'
@@ -62,7 +74,8 @@ class InstaUsersSpider(scrapy.Spider):
 
         yield response.follow(self.make_graphql_url(user_vars, url_type),
                               callback=self.parse_follows,
-                              cb_kwargs={'user_vars': user_vars, 'user': user})
+                              cb_kwargs={'user_vars': user_vars, 'user': user}
+                              )
         print(user_id)
 
     def parse_follows(self, response: HtmlResponse, user_vars, user):
@@ -100,6 +113,7 @@ class InstaUsersSpider(scrapy.Spider):
                 url_type = 'posts'
                 post_vars = deepcopy(variables_base.get(url_type))
                 follow_id = itm['node']['id']
+
                 post_vars.update({'id': follow_id})
                 next_page = self.make_graphql_url(post_vars, url_type)
                 yield response.follow(next_page,
@@ -125,27 +139,29 @@ class InstaUsersSpider(scrapy.Spider):
         else:
             self.posts[follow_id] = {'edges': posts}
 
-
         if len(posts):
             for itm in posts:
-                url_type = 'comments'
-                comments_vars = deepcopy(variables_base.get(url_type))
                 post_shortcode = itm['node']['shortcode']
-                comments_vars.update({'shortcode': post_shortcode})
-                next_page = self.make_graphql_url(comments_vars, url_type)
-                yield response.follow(next_page,
-                                      callback=self.parse_post_comments,
-                                      cb_kwargs={'comments_vars': comments_vars, 'post_shortcode': post_shortcode}
-                                      )
 
-                url_type = 'likes'
-                likes_vars = deepcopy(variables_base.get(url_type))
-                likes_vars.update({'shortcode':post_shortcode})
-                next_page = self.make_graphql_url(likes_vars, url_type)
-                yield response.follow(next_page,
-                                      callback=self.parse_post_likes,
-                                      cb_kwargs={'likes_vars': likes_vars, 'post_shortcode': post_shortcode}
-                                      )
+                if itm['node']['edge_media_to_comment']['count']:
+                    url_type = 'comments'
+                    comments_vars = deepcopy(variables_base.get(url_type))
+                    comments_vars.update({'shortcode': post_shortcode})
+                    next_page_comment = self.make_graphql_url(comments_vars, url_type)
+                    yield response.follow(next_page_comment,
+                                          callback=self.parse_post_comments,
+                                          cb_kwargs={'comments_vars': comments_vars, 'post_shortcode': post_shortcode}
+                                          )
+
+                if itm['node']['edge_media_preview_like']['count']:
+                    url_type = 'likes'
+                    likes_vars = deepcopy(variables_base.get(url_type))
+                    likes_vars.update({'shortcode': post_shortcode})
+                    next_page_like = self.make_graphql_url(likes_vars, url_type)
+                    yield response.follow(next_page_like,
+                                          callback=self.parse_post_likes,
+                                          cb_kwargs={'likes_vars': likes_vars, 'post_shortcode': post_shortcode}
+                                          )
 
                 print(post_shortcode)
 
@@ -184,8 +200,8 @@ class InstaUsersSpider(scrapy.Spider):
         if data['data']['shortcode_media']['edge_media_to_parent_comment']['page_info']['has_next_page']:
             url_type = 'comments'
             comments_vars.update({'after': data['data']['shortcode_media']['edge_media_to_parent_comment']['page_info']['end_cursor']})
-            next_page = self.make_graphql_url(comments_vars, url_type)
-            yield response.follow(next_page,
+            next_page_com = self.make_graphql_url(comments_vars, url_type)
+            yield response.follow(next_page_com,
                                   callback=self.parse_post_comments,
                                   cb_kwargs={'comments_vars': comments_vars, 'post_shortcode': post_shortcode}
                                   )
@@ -206,6 +222,7 @@ class InstaUsersSpider(scrapy.Spider):
         Данные сохраняем в mongoDB.
         """
         data = json.loads(response.body)
+
         likes = data['data']['shortcode_media']['edge_liked_by']['edges']
 
         if self.likes.get(post_shortcode):
@@ -214,10 +231,10 @@ class InstaUsersSpider(scrapy.Spider):
             self.likes[post_shortcode] = {'edges': likes}
 
         if data['data']['shortcode_media']['edge_liked_by']['page_info']['has_next_page']:
-            url_type = 'comments'
+            url_type = 'likes'
             likes_vars.update({'after': data['data']['shortcode_media']['edge_liked_by']['page_info']['end_cursor']})
-            next_page = self.make_graphql_url(likes_vars, url_type)
-            yield response.follow(next_page,
+            next_page_l = self.make_graphql_url(likes_vars, url_type)
+            yield response.follow(next_page_l,
                                   callback=self.parse_post_likes,
                                   cb_kwargs={'likes_vars': likes_vars, 'post_shortcode': post_shortcode}
                                   )

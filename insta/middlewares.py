@@ -10,6 +10,7 @@ from scrapy.downloadermiddlewares.retry import RetryMiddleware
 from scrapy.utils.response import response_status_message
 import time
 
+
 class TooManyRequestsRetryMiddleware(RetryMiddleware):
     def __init__(self, crawler):
         super(TooManyRequestsRetryMiddleware, self).__init__(crawler.settings)
@@ -32,6 +33,7 @@ class TooManyRequestsRetryMiddleware(RetryMiddleware):
             reason = response_status_message(response.status)
             return self._retry(request, reason, spider) or response
         return response
+
 
 class InstaSpiderMiddleware(object):
     # Not all methods need to be defined. If a method is not defined,

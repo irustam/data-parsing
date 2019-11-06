@@ -57,11 +57,14 @@ COOKIES_ENABLED = True
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
+
 RETRY_HTTP_CODES = [429]
+
 DOWNLOADER_MIDDLEWARES = {
-    'scrapy.downloadmiddlewares.retry.RetryMiddleware': None,
+    'scrapy.downloadermiddlewares.retry.RetryMiddleware': None,
     'insta.middlewares.TooManyRequestsRetryMiddleware': 543,
 }
+
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
@@ -71,9 +74,9 @@ DOWNLOADER_MIDDLEWARES = {
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'insta.pipelines.InstaPipeline': 300,
-#}
+ITEM_PIPELINES = {
+    'insta.pipelines.InstaPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html

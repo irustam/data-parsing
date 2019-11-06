@@ -1,6 +1,8 @@
+#instagram configuration:
 INSTA_LOGIN = 'imsciencedev'
-INSTA_PASS = 'getalldatatrue1020'
+INSTA_PASS = ''
 
+#graphql configuration:
 graphql_url = 'https://www.instagram.com/graphql/query/?'
 query_hash = {'follows': 'd04b0a864b4b54837c0d870b0e77e076',
               'posts': '2c5d4d8b70cad329c4a6ebe3abb6eedd',
@@ -12,17 +14,15 @@ variables_base = {'follows': {"include_reel": "true", "fetch_mutual": "false", "
                   'comments': {"first": 100},
                   'likes': {"include_reel": "true", "first": 100},
                   }
-"""
-users = ['jlo',
-         'penelopecruzoficial',
-         'ladygaga',
-         'shakira',
-         'madonna',
-         'leonardodicaprio',
-         'jim.jarmusch',
-         'selenagomez',
-         'therock',
-         ]
-"""
-users = ['imsciencedev',
-         ]
+
+#users = ['jlo', 'penelopecruzoficial', 'ladygaga']
+users = ['irus20']
+
+#Mongo configuration:
+mongo_url = 'mongodb://localhost:27017'
+db_name = 'insta_rustam'
+collections = {'follows': 'insta_user_follows',
+               'posts': 'insta_posts',
+               'comments': 'insta_post_comments',
+               'likes': 'insta_post_likes',
+               }
