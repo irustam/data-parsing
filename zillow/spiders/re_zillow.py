@@ -7,13 +7,12 @@ from selenium.common.exceptions import NoSuchElementException
 from scrapy.http import HtmlResponse
 from scrapy.loader import ItemLoader
 from zillow.items import ZillowItem
-from urllib.parse import urlencode, urljoin
 
 
 class ReZillowSpider(scrapy.Spider):
     name = 're_zillow'
     allowed_domains = ['zillow.com', 'photos.zillowstatic.com', 'zillowstatic.com']
-    start_urls = ['https://www.zillow.com/fort-worth-tx/']
+    start_urls = ['https://www.zillow.com/homes/Monahans,-TX_rb/']
     browser = webdriver.Firefox()
 
     def parse(self, response: HtmlResponse):
@@ -68,8 +67,10 @@ class ReZillowSpider(scrapy.Spider):
                         header = block.find_element_by_xpath('//h5').text
                         facts_sub_blocks = block.find_elements_by_xpath('div/div')
                     except NoSuchElementException:
-                        header = block.find_element_by_xpath('div/div[contains(@class, "header")]').text
-                        facts_sub_blocks = block.find_elements_by_xpath('div/ul/li')
+                        facts_sub_blocks = []
+                        if len(block.find_elements_by_xpath('div/div[contains(@class, "header")]')):
+                            header = block.find_element_by_xpath('div/div[contains(@class, "header")]').text
+                            facts_sub_blocks = block.find_elements_by_xpath('div/ul/li')
 
 
                     sub_block_result = {}
